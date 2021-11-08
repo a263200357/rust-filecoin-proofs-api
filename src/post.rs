@@ -7,6 +7,7 @@ use crate::types::VanillaProofBytes;
 use crate::{
     ChallengeSeed, FallbackPoStSectorProof, MerkleTreeTrait, PartitionSnarkProof, PoStType,
     PrivateReplicaInfo, ProverId, PublicReplicaInfo, RegisteredPoStProof, SectorId, SnarkProof,
+    AggregateSnarkProof, RegisteredAggregationProof,
 };
 
 pub fn generate_winning_post_sector_challenge(
@@ -332,7 +333,7 @@ fn generate_window_post_with_vanilla_inner<Tree: 'static + MerkleTreeTrait>(
     randomness: &ChallengeSeed,
     prover_id: ProverId,
     vanilla_proofs: &[VanillaProofBytes],
-) -> Result<Vec<(RegisteredPoStProof, SnarkProof)>> {
+) -> Result<(RegisteredPoStProof, SnarkProof)> {
     ensure!(
         !vanilla_proofs.is_empty(),
         "vanilla_proofs cannot be an empty list"
@@ -355,14 +356,14 @@ fn generate_window_post_with_vanilla_inner<Tree: 'static + MerkleTreeTrait>(
 
     // once there are multiple versions, merge them before returning
 
-    Ok(vec![(registered_post_proof_type, posts_v1)])
+    Ok((registered_post_proof_type, posts_v1))
 }
 
 pub fn generate_window_post(
     randomness: &ChallengeSeed,
     replicas: &BTreeMap<SectorId, PrivateReplicaInfo>,
     prover_id: ProverId,
-) -> Result<Vec<(RegisteredPoStProof, SnarkProof)>> {
+) -> Result<(RegisteredPoStProof, SnarkProof)> {
     ensure!(!replicas.is_empty(), "no replicas supplied");
     let registered_post_proof_type_v1 = replicas
         .values()
@@ -389,7 +390,7 @@ fn generate_window_post_inner<Tree: 'static + MerkleTreeTrait>(
     randomness: &ChallengeSeed,
     replicas: &BTreeMap<SectorId, PrivateReplicaInfo>,
     prover_id: ProverId,
-) -> Result<Vec<(RegisteredPoStProof, SnarkProof)>> {
+) -> Result<(RegisteredPoStProof, SnarkProof)> {
     let mut replicas_v1 = BTreeMap::new();
 
     for (id, info) in replicas.iter() {
@@ -423,19 +424,18 @@ fn generate_window_post_inner<Tree: 'static + MerkleTreeTrait>(
 
     // once there are multiple versions, merge them before returning
 
-    Ok(vec![(registered_proof_v1, posts_v1)])
+    Ok((registered_proof_v1, posts_v1))
 }
 
 pub fn verify_window_post(
     randomness: &ChallengeSeed,
-    proofs: &[(RegisteredPoStProof, &[u8])],
+    proof: &(RegisteredPoStProof, &[u8]),
     replicas: &BTreeMap<SectorId, PublicReplicaInfo>,
     prover_id: ProverId,
 ) -> Result<bool> {
     ensure!(!replicas.is_empty(), "no replicas supplied");
-    ensure!(proofs.len() == 1, "only one version of PoSt supported");
 
-    let registered_post_proof_type_v1 = proofs[0].0;
+    let registered_post_proof_type_v1 = proof.0;
 
     ensure!(
         registered_post_proof_type_v1.typ() == PoStType::Window,
@@ -451,7 +451,7 @@ pub fn verify_window_post(
         verify_window_post_inner,
         registered_post_proof_type_v1,
         randomness,
-        proofs,
+        proof,
         replicas,
         prover_id,
     )
@@ -460,7 +460,7 @@ pub fn verify_window_post(
 fn verify_window_post_inner<Tree: 'static + MerkleTreeTrait>(
     registered_proof_v1: RegisteredPoStProof,
     randomness: &ChallengeSeed,
-    proofs: &[(RegisteredPoStProof, &[u8])],
+    proof: &(RegisteredPoStProof, &[u8]),
     replicas: &BTreeMap<SectorId, PublicReplicaInfo>,
     prover_id: ProverId,
 ) -> Result<bool> {
@@ -486,7 +486,141 @@ fn verify_window_post_inner<Tree: 'static + MerkleTreeTrait>(
         randomness,
         &replicas_v1,
         prover_id,
-        proofs[0].1,
+        proof.1,
+    )?;
+
+    // once there are multiple versions, merge them before returning
+
+    Ok(valid_v1)
+}
+
+pub fn aggregate_window_post_proofs(
+    registered_aggregation: RegisteredAggregationProof,
+    randomnesses: &[ChallengeSeed],
+    proofs: &[(RegisteredPoStProof, &[u8])], 
+    total_sector_count: usize,
+) -> Result<AggregateSnarkProof> {
+    ensure!(
+        randomnesses.len() == proofs.len(),
+        "the lenth of randomness and proof is not match"
+    );
+
+    let registered_post_proof_type_v1 = proofs[0].0;
+    ensure!(
+        registered_post_proof_type_v1.typ() == PoStType::Window,
+        "invalid post type provided"
+    );
+
+    ensure!(
+        registered_aggregation == RegisteredAggregationProof::SnarkPackV1,
+        "unusupported aggregation version"
+    );
+
+    with_shape!(
+        u64::from(registered_post_proof_type_v1.sector_size()),
+        aggregate_window_post_proofs_inner,
+        registered_post_proof_type_v1,
+        randomnesses,
+        proofs,
+        total_sector_count,
+    )
+}
+
+fn aggregate_window_post_proofs_inner<Tree: 'static + MerkleTreeTrait>(
+    registered_proof_v1: RegisteredPoStProof,
+    randomnesses: &[ChallengeSeed],
+    proofs: &[(RegisteredPoStProof, &[u8])],
+    total_sector_count: usize,
+) -> Result<AggregateSnarkProof> {
+    let mut agg_proofs: Vec<Vec<u8>> = Vec::new();
+
+    for (registered_proof, proof) in proofs.into_iter() {
+
+        ensure!(
+            registered_proof == &registered_proof_v1,
+            "can only aggregate the same kind of PoSt"
+        );
+        agg_proofs.push(proof.to_vec());
+    }
+
+    ensure!(!agg_proofs.is_empty(), "missing proofs");
+    filecoin_proofs_v1::aggregate_window_post_proofs::<Tree>(
+        &registered_proof_v1.as_v1_config(),
+        randomnesses,
+        agg_proofs.as_slice(),
+        total_sector_count,
+    )
+}
+
+pub fn verify_aggregate_window_post_proofs(
+    registered_proof_v1: RegisteredPoStProof,
+    registered_aggregation: RegisteredAggregationProof,
+    prover_id: ProverId,
+    aggregate_proof_bytes: AggregateSnarkProof,
+    randomnesses: &[ChallengeSeed],
+    replicas: &[BTreeMap<SectorId, PublicReplicaInfo>],
+) -> Result<bool> {
+    ensure!(!replicas.is_empty(), "no replicas supplied");
+    ensure!(
+        randomnesses.len() == replicas.len(),
+        "Randomnesses and Replica don't match"
+    );
+
+    ensure!(
+        registered_proof_v1.major_version() == 1,
+        "only V1 supported"
+    );
+
+    ensure!(
+        registered_aggregation == RegisteredAggregationProof::SnarkPackV1,
+        "unusupported aggregation version"
+    );
+
+    with_shape!(
+        u64::from(registered_proof_v1.sector_size()),
+        verify_aggregate_window_post_proofs_inner,
+        registered_proof_v1,
+        prover_id,
+        aggregate_proof_bytes,
+        randomnesses,
+        replicas,
+    )
+}
+
+fn verify_aggregate_window_post_proofs_inner<Tree: 'static + MerkleTreeTrait>(
+    registered_proof_v1: RegisteredPoStProof,
+    prover_id: ProverId,
+    aggregate_proof_bytes: AggregateSnarkProof,
+    randomnesses: &[ChallengeSeed],
+    replicas: &[BTreeMap<SectorId, PublicReplicaInfo>],
+) -> Result<bool> {
+    let mut replica_infos_v1 = Vec::new();
+
+    for replica in replicas.iter() {
+        let mut replica_info_v1 = BTreeMap::new();
+        for (id, info) in replica.iter(){
+            let PublicReplicaInfo {
+                registered_proof,
+                comm_r,
+            } = info;
+
+            ensure!(
+                registered_proof == &registered_proof_v1,
+                "can only verify the same kind of PoSt"
+            );
+
+            let info_v1 = filecoin_proofs_v1::PublicReplicaInfo::new(*comm_r)?;
+            replica_info_v1.insert(*id, info_v1);
+        }
+        replica_infos_v1.push(replica_info_v1);
+    }
+
+    let valid_v1 = filecoin_proofs_v1::verify_aggregate_window_post_proofs::<Tree>(
+        &registered_proof_v1.as_v1_config(),
+        prover_id,
+        aggregate_proof_bytes,
+        randomnesses,
+        replica_infos_v1.as_slice(),
     )?;
 
     // once there are multiple versions, merge them before returning

@@ -9,9 +9,11 @@ use filecoin_hashers::Hasher;
 use filecoin_proofs_v1::constants::{
     SectorShape16KiB, SectorShape16MiB, SectorShape1GiB, SectorShape2KiB, SectorShape32GiB,
     SectorShape32KiB, SectorShape4KiB, SectorShape512MiB, SectorShape64GiB, SectorShape8MiB,
+    SectorShape32MiB, SectorShape64MiB, SectorShape128MiB, SectorShape256MiB,
     SECTOR_SIZE_16_KIB, SECTOR_SIZE_16_MIB, SECTOR_SIZE_1_GIB, SECTOR_SIZE_2_KIB,
     SECTOR_SIZE_32_GIB, SECTOR_SIZE_32_KIB, SECTOR_SIZE_4_KIB, SECTOR_SIZE_512_MIB,
-    SECTOR_SIZE_64_GIB, SECTOR_SIZE_8_MIB,
+    SECTOR_SIZE_64_GIB, SECTOR_SIZE_8_MIB, SECTOR_SIZE_32_MIB, SECTOR_SIZE_64_MIB,
+    SECTOR_SIZE_128_MIB, SECTOR_SIZE_256_MIB
 };
 use filecoin_proofs_v1::types::MerkleTreeTrait;
 use filecoin_proofs_v1::types::VanillaSealProof as RawVanillaSealProof;
@@ -36,6 +38,11 @@ pub struct SealPreCommitPhase1Output {
 pub enum Labels {
     StackedDrg2KiBV1(RawLabels<SectorShape2KiB>),
     StackedDrg8MiBV1(RawLabels<SectorShape8MiB>),
+    StackedDrg16MiBV1(RawLabels<SectorShape16MiB>),
+    StackedDrg32MiBV1(RawLabels<SectorShape32MiB>),
+    StackedDrg64MiBV1(RawLabels<SectorShape64MiB>),
+    StackedDrg128MiBV1(RawLabels<SectorShape128MiB>),
+    StackedDrg256MiBV1(RawLabels<SectorShape256MiB>),
     StackedDrg512MiBV1(RawLabels<SectorShape512MiB>),
     StackedDrg32GiBV1(RawLabels<SectorShape32GiB>),
     StackedDrg64GiBV1(RawLabels<SectorShape64GiB>),
@@ -59,6 +66,41 @@ impl Labels {
             StackedDrg8MiBV1 | StackedDrg8MiBV1_1 => {
                 if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape8MiB>>(labels) {
                     Ok(Labels::StackedDrg8MiBV1(labels.clone()))
+                } else {
+                    bail!("invalid labels provided")
+                }
+            }
+            StackedDrg16MiBV1 | StackedDrg16MiBV1_1 => {
+                if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape16MiB>>(labels) {
+                    Ok(Labels::StackedDrg16MiBV1(labels.clone()))
+                } else {
+                    bail!("invalid labels provided")
+                }
+            }
+            StackedDrg32MiBV1 | StackedDrg32MiBV1_1 => {
+                if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape32MiB>>(labels) {
+                    Ok(Labels::StackedDrg32MiBV1(labels.clone()))
+                } else {
+                    bail!("invalid labels provided")
+                }
+            }
+            StackedDrg64MiBV1 | StackedDrg64MiBV1_1 => {
+                if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape64MiB>>(labels) {
+                    Ok(Labels::StackedDrg64MiBV1(labels.clone()))
+                } else {
+                    bail!("invalid labels provided")
+                }
+            }
+            StackedDrg128MiBV1 | StackedDrg128MiBV1_1 => {
+                if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape128MiB>>(labels) {
+                    Ok(Labels::StackedDrg128MiBV1(labels.clone()))
+                } else {
+                    bail!("invalid labels provided")
+                }
+            }
+            StackedDrg256MiBV1 | StackedDrg256MiBV1_1 => {
+                if let Some(labels) = Any::downcast_ref::<RawLabels<SectorShape256MiB>>(labels) {
+                    Ok(Labels::StackedDrg256MiBV1(labels.clone()))
                 } else {
                     bail!("invalid labels provided")
                 }
@@ -110,6 +152,41 @@ impl<Tree: 'static + MerkleTreeTrait> TryInto<RawLabels<Tree>> for Labels {
                     bail!("cannot convert 8Mib into different structure")
                 }
             }
+            StackedDrg16MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 16Mib into different structure")
+                }
+            }
+            StackedDrg32MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 32Mib into different structure")
+                }
+            }
+            StackedDrg64MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 64Mib into different structure")
+                }
+            }
+            StackedDrg128MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 128Mib into different structure")
+                }
+            }
+            StackedDrg256MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 256Mib into different structure")
+                }
+            }
             StackedDrg512MiBV1(raw) => {
                 if let Some(raw) = Any::downcast_ref::<RawLabels<Tree>>(&raw) {
                     Ok(raw.clone())
@@ -158,6 +235,11 @@ pub struct SealCommitPhase1Output {
 pub enum VanillaSealProof {
     StackedDrg2KiBV1(Vec<Vec<RawVanillaSealProof<SectorShape2KiB>>>),
     StackedDrg8MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape8MiB>>>),
+    StackedDrg16MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape16MiB>>>),
+    StackedDrg32MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape32MiB>>>),
+    StackedDrg64MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape64MiB>>>),
+    StackedDrg128MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape128MiB>>>),
+    StackedDrg256MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape256MiB>>>),
     StackedDrg512MiBV1(Vec<Vec<RawVanillaSealProof<SectorShape512MiB>>>),
     StackedDrg32GiBV1(Vec<Vec<RawVanillaSealProof<SectorShape32GiB>>>),
     StackedDrg64GiBV1(Vec<Vec<RawVanillaSealProof<SectorShape64GiB>>>),
@@ -186,6 +268,51 @@ impl VanillaSealProof {
                     Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape8MiB>>>>(proofs)
                 {
                     Ok(VanillaSealProof::StackedDrg8MiBV1(proofs.clone()))
+                } else {
+                    bail!("invalid proofs provided")
+                }
+            }
+            StackedDrg16MiBV1 | StackedDrg16MiBV1_1 => {
+                if let Some(proofs) =
+                    Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape16MiB>>>>(proofs)
+                {
+                    Ok(VanillaSealProof::StackedDrg16MiBV1(proofs.clone()))
+                } else {
+                    bail!("invalid proofs provided")
+                }
+            }
+            StackedDrg32MiBV1 | StackedDrg32MiBV1_1 => {
+                if let Some(proofs) =
+                    Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape32MiB>>>>(proofs)
+                {
+                    Ok(VanillaSealProof::StackedDrg32MiBV1(proofs.clone()))
+                } else {
+                    bail!("invalid proofs provided")
+                }
+            }
+            StackedDrg64MiBV1 | StackedDrg64MiBV1_1 => {
+                if let Some(proofs) =
+                    Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape64MiB>>>>(proofs)
+                {
+                    Ok(VanillaSealProof::StackedDrg64MiBV1(proofs.clone()))
+                } else {
+                    bail!("invalid proofs provided")
+                }
+            }
+            StackedDrg128MiBV1 | StackedDrg128MiBV1_1 => {
+                if let Some(proofs) =
+                    Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape128MiB>>>>(proofs)
+                {
+                    Ok(VanillaSealProof::StackedDrg128MiBV1(proofs.clone()))
+                } else {
+                    bail!("invalid proofs provided")
+                }
+            }
+            StackedDrg256MiBV1 | StackedDrg256MiBV1_1 => {
+                if let Some(proofs) =
+                    Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<SectorShape256MiB>>>>(proofs)
+                {
+                    Ok(VanillaSealProof::StackedDrg256MiBV1(proofs.clone()))
                 } else {
                     bail!("invalid proofs provided")
                 }
@@ -243,6 +370,41 @@ impl<Tree: 'static + MerkleTreeTrait> TryInto<Vec<Vec<RawVanillaSealProof<Tree>>
                     Ok(raw.clone())
                 } else {
                     bail!("cannot convert 8Mib into different structure")
+                }
+            }
+            StackedDrg16MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<Tree>>>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 16Mib into different structure")
+                }
+            }
+            StackedDrg32MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<Tree>>>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 32Mib into different structure")
+                }
+            }
+            StackedDrg64MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<Tree>>>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 64Mib into different structure")
+                }
+            }
+            StackedDrg128MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<Tree>>>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 128Mib into different structure")
+                }
+            }
+            StackedDrg256MiBV1(raw) => {
+                if let Some(raw) = Any::downcast_ref::<Vec<Vec<RawVanillaSealProof<Tree>>>>(&raw) {
+                    Ok(raw.clone())
+                } else {
+                    bail!("cannot convert 256Mib into different structure")
                 }
             }
             StackedDrg512MiBV1(raw) => {
@@ -728,6 +890,18 @@ pub fn fauxrep<R: AsRef<Path>, S: AsRef<Path>>(
         SECTOR_SIZE_16_MIB => {
             filecoin_proofs_v1::fauxrep::<_, _, SectorShape16MiB>(config, cache_path, replica_path)
         }
+        SECTOR_SIZE_32_MIB => {
+            filecoin_proofs_v1::fauxrep::<_, _, SectorShape32MiB>(config, cache_path, replica_path)
+        }
+        SECTOR_SIZE_64_MIB => {
+            filecoin_proofs_v1::fauxrep::<_, _, SectorShape64MiB>(config, cache_path, replica_path)
+        }
+        SECTOR_SIZE_128_MIB => {
+            filecoin_proofs_v1::fauxrep::<_, _, SectorShape128MiB>(config, cache_path, replica_path)
+        }
+        SECTOR_SIZE_256_MIB => {
+            filecoin_proofs_v1::fauxrep::<_, _, SectorShape256MiB>(config, cache_path, replica_path)
+        }
         SECTOR_SIZE_512_MIB => {
             filecoin_proofs_v1::fauxrep::<_, _, SectorShape512MiB>(config, cache_path, replica_path)
         }
@@ -777,6 +951,18 @@ pub fn fauxrep2<R: AsRef<Path>, S: AsRef<Path>>(
         }
         SECTOR_SIZE_16_MIB => {
             filecoin_proofs_v1::fauxrep2::<_, _, SectorShape16MiB>(cache_path, existing_p_aux_path)
+        }
+        SECTOR_SIZE_32_MIB => {
+            filecoin_proofs_v1::fauxrep2::<_, _, SectorShape32MiB>(cache_path, existing_p_aux_path)
+        }
+        SECTOR_SIZE_64_MIB => {
+            filecoin_proofs_v1::fauxrep2::<_, _, SectorShape64MiB>(cache_path, existing_p_aux_path)
+        }
+        SECTOR_SIZE_128_MIB => {
+            filecoin_proofs_v1::fauxrep2::<_, _, SectorShape128MiB>(cache_path, existing_p_aux_path)
+        }
+        SECTOR_SIZE_256_MIB => {
+            filecoin_proofs_v1::fauxrep2::<_, _, SectorShape256MiB>(cache_path, existing_p_aux_path)
         }
         SECTOR_SIZE_512_MIB => {
             filecoin_proofs_v1::fauxrep2::<_, _, SectorShape512MiB>(cache_path, existing_p_aux_path)
@@ -1005,6 +1191,54 @@ pub fn get_unsealed_range_mapped<T: Into<PathBuf> + AsRef<Path>, W: Write>(
             offset,
             num_bytes,
         ),
+        SECTOR_SIZE_32_MIB => filecoin_proofs_v1::unseal_range_mapped::<_, _, SectorShape32MiB>(
+            config,
+            cache_path,
+            sealed_path.into(),
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_64_MIB => filecoin_proofs_v1::unseal_range_mapped::<_, _, SectorShape64MiB>(
+            config,
+            cache_path,
+            sealed_path.into(),
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_128_MIB => filecoin_proofs_v1::unseal_range_mapped::<_, _, SectorShape128MiB>(
+            config,
+            cache_path,
+            sealed_path.into(),
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_256_MIB => filecoin_proofs_v1::unseal_range_mapped::<_, _, SectorShape256MiB>(
+            config,
+            cache_path,
+            sealed_path.into(),
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
         SECTOR_SIZE_512_MIB => filecoin_proofs_v1::unseal_range_mapped::<_, _, SectorShape512MiB>(
             config,
             cache_path,
@@ -1153,6 +1387,54 @@ pub fn unseal_range<T: Into<PathBuf> + AsRef<Path>, R: Read, W: Write>(
             offset,
             num_bytes,
         ),
+        SECTOR_SIZE_32_MIB => filecoin_proofs_v1::unseal_range::<_, _, _, SectorShape32MiB>(
+            config,
+            cache_path,
+            sealed_sector,
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_64_MIB => filecoin_proofs_v1::unseal_range::<_, _, _, SectorShape64MiB>(
+            config,
+            cache_path,
+            sealed_sector,
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_128_MIB => filecoin_proofs_v1::unseal_range::<_, _, _, SectorShape128MiB>(
+            config,
+            cache_path,
+            sealed_sector,
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
+        SECTOR_SIZE_256_MIB => filecoin_proofs_v1::unseal_range::<_, _, _, SectorShape256MiB>(
+            config,
+            cache_path,
+            sealed_sector,
+            unsealed_output,
+            prover_id,
+            sector_id,
+            comm_d,
+            ticket,
+            offset,
+            num_bytes,
+        ),
         SECTOR_SIZE_512_MIB => filecoin_proofs_v1::unseal_range::<_, _, _, SectorShape512MiB>(
             config,
             cache_path,
@@ -1212,8 +1494,12 @@ pub fn generate_piece_commitment<T: Read>(
 ) -> Result<PieceInfo> {
     use RegisteredSealProof::*;
     match registered_proof {
-        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg512MiBV1 | StackedDrg32GiBV1
-        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg512MiBV1_1
+        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg16MiBV1| StackedDrg32MiBV1 
+        | StackedDrg64MiBV1 | StackedDrg128MiBV1 | StackedDrg256MiBV1 
+        | StackedDrg512MiBV1 | StackedDrg32GiBV1
+        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg16MiBV1_1 
+        | StackedDrg32MiBV1_1 | StackedDrg64MiBV1_1 | StackedDrg128MiBV1_1 
+        | StackedDrg256MiBV1_1 | StackedDrg512MiBV1_1
         | StackedDrg32GiBV1_1 | StackedDrg64GiBV1_1 => {
             filecoin_proofs_v1::generate_piece_commitment(source, piece_size)
         }
@@ -1233,8 +1519,12 @@ where
 {
     use RegisteredSealProof::*;
     match registered_proof {
-        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg512MiBV1 | StackedDrg32GiBV1
-        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg512MiBV1_1
+        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg16MiBV1 | StackedDrg32MiBV1 
+        | StackedDrg64MiBV1 | StackedDrg128MiBV1 | StackedDrg256MiBV1 
+        | StackedDrg512MiBV1 | StackedDrg32GiBV1
+        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg16MiBV1_1 
+        | StackedDrg32MiBV1_1 | StackedDrg64MiBV1_1 | StackedDrg128MiBV1_1 
+        | StackedDrg256MiBV1_1 | StackedDrg512MiBV1_1
         | StackedDrg32GiBV1_1 | StackedDrg64GiBV1_1 => {
             filecoin_proofs_v1::add_piece(source, target, piece_size, piece_lengths)
         }
@@ -1253,8 +1543,12 @@ where
 {
     use RegisteredSealProof::*;
     match registered_proof {
-        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg512MiBV1 | StackedDrg32GiBV1
-        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg512MiBV1_1
+        StackedDrg2KiBV1 | StackedDrg8MiBV1 | StackedDrg16MiBV1 | StackedDrg32MiBV1 
+        | StackedDrg64MiBV1 | StackedDrg128MiBV1 | StackedDrg256MiBV1 
+        | StackedDrg512MiBV1 | StackedDrg32GiBV1
+        | StackedDrg64GiBV1 | StackedDrg2KiBV1_1 | StackedDrg8MiBV1_1 | StackedDrg16MiBV1_1
+        | StackedDrg32MiBV1_1 | StackedDrg64MiBV1_1 | StackedDrg128MiBV1_1 
+        | StackedDrg256MiBV1_1 | StackedDrg512MiBV1_1
         | StackedDrg32GiBV1_1 | StackedDrg64GiBV1_1 => {
             filecoin_proofs_v1::write_and_preprocess(source, target, piece_size)
         }
