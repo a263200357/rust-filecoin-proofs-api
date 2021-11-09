@@ -317,7 +317,7 @@ pub fn generate_window_post_with_vanilla(
     randomness: &ChallengeSeed,
     prover_id: ProverId,
     vanilla_proofs: &[VanillaProofBytes],
-) -> Result<Vec<(RegisteredPoStProof, SnarkProof)>> {
+) -> Result<(RegisteredPoStProof, SnarkProof)> {
     with_shape!(
         u64::from(registered_post_proof_type.sector_size()),
         generate_window_post_with_vanilla_inner,

@@ -579,14 +579,24 @@ mod tests {
     use super::*;
     use filecoin_proofs_v1::MAX_LEGACY_REGISTERED_SEAL_PROOF_ID;
 
-    const REGISTERED_SEAL_PROOFS: [RegisteredSealProof; 10] = [
+    const REGISTERED_SEAL_PROOFS: [RegisteredSealProof; 20] = [
         RegisteredSealProof::StackedDrg2KiBV1,
         RegisteredSealProof::StackedDrg8MiBV1,
+        RegisteredSealProof::StackedDrg16MiBV1,
+        RegisteredSealProof::StackedDrg32MiBV1,
+        RegisteredSealProof::StackedDrg64MiBV1,
+        RegisteredSealProof::StackedDrg128MiBV1,
+        RegisteredSealProof::StackedDrg256MiBV1,
         RegisteredSealProof::StackedDrg512MiBV1,
         RegisteredSealProof::StackedDrg32GiBV1,
         RegisteredSealProof::StackedDrg64GiBV1,
         RegisteredSealProof::StackedDrg2KiBV1_1,
         RegisteredSealProof::StackedDrg8MiBV1_1,
+        RegisteredSealProof::StackedDrg16MiBV1_1,
+        RegisteredSealProof::StackedDrg32MiBV1_1,
+        RegisteredSealProof::StackedDrg64MiBV1_1,
+        RegisteredSealProof::StackedDrg128MiBV1_1,
+        RegisteredSealProof::StackedDrg256MiBV1_1,
         RegisteredSealProof::StackedDrg512MiBV1_1,
         RegisteredSealProof::StackedDrg32GiBV1_1,
         RegisteredSealProof::StackedDrg64GiBV1_1,
@@ -607,29 +617,59 @@ mod tests {
             RegisteredSealProof::StackedDrg8MiBV1 => {
                 "0100000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg512MiBV1 => {
+            RegisteredSealProof::StackedDrg16MiBV1 => {
                 "0200000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg32GiBV1 => {
+            RegisteredSealProof::StackedDrg32MiBV1 => {
                 "0300000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg64GiBV1 => {
+            RegisteredSealProof::StackedDrg64MiBV1 => {
                 "0400000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg2KiBV1_1 => {
+            RegisteredSealProof::StackedDrg128MiBV1 => {
                 "0500000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg8MiBV1_1 => {
+            RegisteredSealProof::StackedDrg256MiBV1 => {
                 "0600000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg512MiBV1_1 => {
+            RegisteredSealProof::StackedDrg512MiBV1 => {
                 "0700000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg32GiBV1_1 => {
+            RegisteredSealProof::StackedDrg32GiBV1 => {
                 "0800000000000000000000000000000000000000000000000000000000000000"
             }
-            RegisteredSealProof::StackedDrg64GiBV1_1 => {
+            RegisteredSealProof::StackedDrg64GiBV1 => {
                 "0900000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg2KiBV1_1 => {
+                "0a00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg8MiBV1_1 => {
+                "0b00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg16MiBV1_1 => {
+                "0c00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg32MiBV1_1 => {
+                "0d00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg64MiBV1_1 => {
+                "0e00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg128MiBV1_1 => {
+                "0f00000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg256MiBV1_1 => {
+                "1000000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg512MiBV1_1 => {
+                "1100000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg32GiBV1_1 => {
+                "1200000000000000000000000000000000000000000000000000000000000000"
+            }
+            RegisteredSealProof::StackedDrg64GiBV1_1 => {
+                "1300000000000000000000000000000000000000000000000000000000000000"
             }
         };
         let hex: String = rsp
@@ -655,12 +695,22 @@ mod tests {
             match rsp {
                 RegisteredSealProof::StackedDrg2KiBV1
                 | RegisteredSealProof::StackedDrg8MiBV1
+                | RegisteredSealProof::StackedDrg16MiBV1
+                | RegisteredSealProof::StackedDrg32MiBV1
+                | RegisteredSealProof::StackedDrg64MiBV1
+                | RegisteredSealProof::StackedDrg128MiBV1
+                | RegisteredSealProof::StackedDrg256MiBV1
                 | RegisteredSealProof::StackedDrg512MiBV1
                 | RegisteredSealProof::StackedDrg32GiBV1
                 | RegisteredSealProof::StackedDrg64GiBV1 => assert!(is_legacy),
 
                 RegisteredSealProof::StackedDrg2KiBV1_1
                 | RegisteredSealProof::StackedDrg8MiBV1_1
+                | RegisteredSealProof::StackedDrg16MiBV1_1
+                | RegisteredSealProof::StackedDrg32MiBV1_1
+                | RegisteredSealProof::StackedDrg64MiBV1_1
+                | RegisteredSealProof::StackedDrg128MiBV1_1
+                | RegisteredSealProof::StackedDrg256MiBV1_1
                 | RegisteredSealProof::StackedDrg512MiBV1_1
                 | RegisteredSealProof::StackedDrg32GiBV1_1
                 | RegisteredSealProof::StackedDrg64GiBV1_1 => assert!(!is_legacy),
